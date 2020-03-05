@@ -1,0 +1,1 @@
+This project contains primary files for datalogging and analysis of high-precision temporal audio data. Additional files provide tests for timing accuracy of the arduino with respect to a GPS PPS signal.
