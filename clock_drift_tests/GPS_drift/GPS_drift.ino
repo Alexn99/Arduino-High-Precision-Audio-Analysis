@@ -30,7 +30,7 @@ void loop() {
         interrupt_flag_1 = false;
     }
     if (interrupt_flag_2) {
-        Serial.println("PPS2 micros: " + String(interrupt_time_2) + ",");
+        Serial.println("PPS2 micros: " + String(interrupt_time_2) + ",\n");
         interrupt_flag_2 = false;
     }
 }
@@ -44,6 +44,6 @@ void ISR_1 () {
 
 
 void ISR_2 () {
-    interrupt_time_1 = micros();
-    interrupt_flag_1 = true;
+    interrupt_time_2 = micros();
+    interrupt_flag_2 = true;
 }

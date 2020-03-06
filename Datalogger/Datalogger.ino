@@ -50,7 +50,7 @@ Adafruit_BME680 bme;
 const int chipSelect = 53;
 
 // Set GPS PPS interrupt pin
-int PPS_pin = 19
+int PPS_pin = 19;
 
 float interrupt_time;
 bool interrupt_flag = false;
@@ -108,7 +108,7 @@ void setup() {
     // Used in post-processing for increasing timing accuracy
     File fileIO = SD.open(clockDriftFile, FILE_WRITE);
     char key = keypad.getKey();
-    while (!(key == 1))  {
+    while (!(key == '1'))  {
         // If PPS interrupt flag set, write interrupt time to file
         if (interrupt_flag) {
             fileIO.println(String(interrupt_time) + ',');
@@ -123,62 +123,62 @@ void setup() {
 void loop() {
 
     // Read current time (convert to seconds)
-    String testTime = String(micros() / 1000000.);
+    double test_time_float[20];
+    String test_time[20];
+    double mic_data_float[20];
+    String mic_data[20];
+    // Sample microphone
+    for (int i = 0; i < 20; ++i) {
+        mic_data_float[i] = analogRead(7);
+        test_time_float[i] = micros();
+    }
+    for (int i = 0; i < 20; ++i) {
+        mic_data[i] = String((mic_data_float[i] * 5.0) / 1024);  // convert to volts
+        test_time[i] = String(test_time_float[i] / 1000000); 
+    }
 
-    // Check for BME reading
     if (!bme.performReading()) {
-        if (DEBUG) {
-            Serial.print("Failed to perform BME 680 reading");
-        }
         return;
     }
 
-    // Disable interrupts while sampling sensors
-    nointerrupts();
-
-    // Sample microphone
-    int sample = analogRead(7);
-    double volts = (sample * 5.0) / 1024;  // convert to volts
-
     // BME 680
     // Read temperature (*C)
-    String temperature = "Temperature (*C): " + String(bme.temperature);
+    String temperature = String(bme.temperature);
     // Read pressure (hPa)
-    String pressure = "Pressure (hPa): " + String(bme.pressure / 100.);
+    String pressure = String(bme.pressure / 100.);
     // Read humidity (%)
-    String humidity = "Humidity (%): " + String(bme.humidity);
+    String humidity = String(bme.humidity);
     // Read gas resistance (KOhms)
-    String gas = "Gas (KOhms): " + String(bme.gas_resistance / 1000.);
+    //String gas = String(bme.gas_resistance / 1000.);
     // Read altitude (m)
-    String altitude = "Altitude (m): " + String(bme.readAltitude(SEALEVELPRESSURE_HPA));
-    // Microphone output (volts)
-    String mic_volts = String(volts);
-
-    // Re-enable interrupts
-    interrupts();
+    //String altitude = String(bme.readAltitude(SEALEVELPRESSURE_HPA));
 
     // Open SD file
     File fileIO = SD.open(sensorDataFile, FILE_WRITE);
-
+    
     if (sensorDataFile) {
         // Write to SD
-        fileIO.println("Time (s): " + testTime);
-        fileIO.println(mic_volts);
-        fileIO.println(temperature);
-        fileIO.println(pressure);
-        fileIO.println(humidity);
-        fileIO.println(gas);
-        fileIO.println(altitude);
+        for (int i = 0; i < 20; ++i) {
+            fileIO.println(test_time[i] + ',');
+            fileIO.println(mic_data[i] + ',');
+        }
+        fileIO.println(temperature + ',');
+        fileIO.println(pressure + ',');
+        fileIO.println(humidity + ',');
+        //fileIO.println(gas + ',');
+        //fileIO.println(altitude + ',');
         fileIO.println();
         if (DEBUG) {
             // Print to Serial
-            Serial.println("Time (s): " + testTime);
-            Serial.println(mic_volts);
-            Serial.println(temperature);
-            Serial.println(pressure);
-            Serial.println(humidity);
-            Serial.println(gas);
-            Serial.println(altitude);
+            for (int i = 0; i < 20; ++i) {
+                Serial.println(test_time[i] + ',');
+                Serial.println(mic_data[i] + ',');
+            }
+            Serial.println("Temperature (*C): " + temperature);
+            Serial.println("Pressure (hPa): " + pressure);
+            Serial.println("Humidity (%): " + humidity);
+            //Serial.println("Gas (KOhms): " + gas);
+            //Serial.println("Altitude (m): " + altitude);
             Serial.println();
         }
         fileIO.close();
@@ -186,7 +186,9 @@ void loop() {
     // Open file failure
     else {
         if (DEBUG) {
-            Serial.println("Error opening file: " sensorDataFile);
+            Serial.println("Error opening file: " + sensorDataFile);
         }
     }
+
+    //Serial.println("Time (s): " + testTime);
 }
